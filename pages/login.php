@@ -1,10 +1,26 @@
 <?php
 
     session_start();
+
+    // !isset() = is not set
+    // if $_SESSION['signup_form_csrf_token'] is not set, generate a new token
+    // when token is already available, we won't regenerate it again
+
+    if ( !isset( $_SESSION['login_form_csrf_token'])) {
+        // generate csrf token
+        $_SESSION['login_form_csrf_token'] = bin2hex( random_bytes(32) );
+    }
+
     $database = new PDO('mysql:host=devkinsta_db;dbname=Classroom_Management', 'root', 'aqvEwR9D41FvwC6l');
 
     //make sure it's Form POST requests
     if( $_SERVER['REQUEST_METHOD'] === 'POST') {
+
+        if ( $_POST['login_form_csrf_token'] !== $_SESSION['login_form_csrf_token'] )
+        {
+            die("NOT TODAY KID!!!");
+        }
+
         //trigger login process
         $email = $_POST['email'];
         $password = $_POST['password'];
@@ -29,6 +45,8 @@
                     'id' => $user['id'],
                     'email' => $user['email']
                 ];
+
+                unset( $_SESSION['login_form_csrf_token'] );
 
                 // redirect user back to index
                 header('Location: /home');
@@ -89,6 +107,11 @@
           <div class="d-grid">
             <button type="submit" class="btn btn-primary btn-fu">Login</button>
           </div>
+          <input
+          type="hidden"
+          name="login_form_csrf_token"
+          value="<?php echo $_SESSION['login_form_csrf_token']; ?>"
+          />
         </form>
       </div>
     </div>

@@ -1,5 +1,15 @@
 <?php
     session_start();
+
+    // !isset() = is not set
+    // if $_SESSION['signup_form_csrf_token'] is not set, generate a new token
+    // when token is already available, we won't regenerate it again
+
+    if ( !isset( $_SESSION['add_form_csrf_token'])) {
+      // generate csrf token
+      $_SESSION['add_form_csrf_token'] = bin2hex( random_bytes(32) );
+  }
+
     $database = new PDO('mysql:host=devkinsta_db;dbname=Classroom_Management', 'root', 'aqvEwR9D41FvwC6l'); //Your database password
     $query = $database->prepare('SELECT * FROM students');
     $query->execute();
@@ -9,6 +19,13 @@
     ) {
         var_dump($_POST['action']);
         if($_POST['action'] === 'add') {
+          if ( $_POST['add_form_csrf_token'] !== $_SESSION['add_form_csrf_token'] )
+        {
+            die("NOT TODAY KID!!!");
+        }
+
+        unset( $_SESSION['login_form_csrf_token'] );
+
             //add new student
             $statement = $database->prepare(
                 'INSERT INTO students (`name`)
@@ -78,6 +95,11 @@
             value="add"
             />
           <button class="btn btn-primary btn-sm rounded ms-2">Add</button>
+          <input 
+                type="hidden"
+                name="add_form_csrf_token"
+                value="<?php echo $_SESSION['add_form_csrf_token']; ?>"
+                />
     </form>
         <?php endif; ?>
       </div>
